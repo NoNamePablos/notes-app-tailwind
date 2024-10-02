@@ -30,8 +30,12 @@ export default defineStore('notes', () => {
     selectedNote.content = noteContent || ''
   }
 
-  const createEmptyNote = (): void => {
-    const title = `Note ${notes.value.length + 1}`
+  const createEmptyNote = async (): Promise<void> => {
+    const title = await window.context.createNote()
+
+    if (!title) {
+      return
+    }
 
     const newNote: Notes.Info = {
       id: uuidv4(),
@@ -45,16 +49,20 @@ export default defineStore('notes', () => {
     setSelectedNote(notesData.value[0])
   }
 
-  const deleteNote = (note: Notes.Info): void => {
-    const index = notesData.value.findIndex((noteItem: Notes.Info) => noteItem.id === note.id)
+  const deleteNote = async (): Promise<void> => {
+    if (!selectedNote || !notesData.value) {
+      return
+    }
 
-    if (index !== -1) {
-      notesData.value.splice(index, 1)
+    const isDeleted = await window.context.deleteNote(selectedNote.title)
 
-      if (!notesData.value.length) {
-        return
-      }
+    if (!isDeleted) {
+      return
+    }
 
+    await loadNotes()
+
+    if (notesData.value) {
       setSelectedNote(notesData.value[0])
     }
   }

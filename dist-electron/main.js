@@ -138,6 +138,52 @@ const writeNote = async (filename, content) => {
   console.info(`Writing note ${filename} to ${rootDir}`);
   return fsExtra.writeFile(`${rootDir}/${filename}.md`, content, { encoding: "utf8" });
 };
+const createNote = async () => {
+  const rootDir = getRootDir();
+  await fsExtra.ensureDir(rootDir);
+  const { filePath, canceled } = await electron.dialog.showSaveDialog({
+    title: "New Note",
+    defaultPath: `${rootDir}/${v4()}.md`,
+    buttonLabel: "Create",
+    properties: ["showOverwriteConfirmation"],
+    showsTagField: false,
+    filters: [{ name: "Markdown", extensions: ["md"] }]
+  });
+  if (canceled || !filePath) {
+    console.info(`Note create canceled`);
+    return false;
+  }
+  const { name: filename, dir: parentDir } = path.parse(filePath);
+  if (parentDir !== rootDir) {
+    await electron.dialog.showMessageBox({
+      type: "error",
+      title: "Creation failed",
+      message: `All notes must be saved under ${rootDir}`
+    });
+    return false;
+  }
+  console.info(`Creating note ${filePath}`);
+  await fsExtra.writeFile(filePath, "");
+  return filename;
+};
+const deleteNote = async (filename) => {
+  const rootDir = getRootDir();
+  const { response } = await electron.dialog.showMessageBox({
+    type: "warning",
+    title: "Delete Note",
+    message: `Delete  ${filename} ?`,
+    buttons: ["Удалить", "Отмена"],
+    defaultId: 1,
+    cancelId: 1
+  });
+  if (response === 1) {
+    console.info("Note Deletion canceled");
+    return false;
+  }
+  console.info(`Deleting note ${filename}`);
+  await fsExtra.remove(`${rootDir}/${filename}.md`);
+  return true;
+};
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 const preload = path.join(__dirname, "preload.js");
 const distPath = path.join(__dirname, "../.output/public");
@@ -186,6 +232,8 @@ electron.app.whenReady().then(() => {
   electron.ipcMain.handle("getNotes", (_, ...args) => getNotes(...args));
   electron.ipcMain.handle("readNote", (_, ...args) => readNote(...args));
   electron.ipcMain.handle("writeNote", (_, ...args) => writeNote(...args));
+  electron.ipcMain.handle("createNote", (_, ...args) => createNote(...args));
+  electron.ipcMain.handle("deleteNote", (_, ...args) => deleteNote(...args));
   createWindow();
   electron.app.on("activate", function() {
     if (electron.BrowserWindow.getAllWindows().length === 0) createWindow();
