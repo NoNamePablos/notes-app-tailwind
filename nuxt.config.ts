@@ -1,4 +1,23 @@
 import { fileURLToPath } from 'url'
+import fs from 'node:fs'
+import path from 'node:path'
+import pkg from './package.json'
+
+fs.rmSync(path.join(__dirname, 'dist-electron'), { recursive: true, force: true })
+
+const viteElectronBuildConfig = {
+  build: {
+    minify: process.env.NODE_ENV === 'production',
+    rollupOptions: {
+      external: Object.keys('dependencies' in pkg ? pkg.dependencies : {})
+    }
+  },
+  resolve: {
+    alias: {
+      '@': __dirname
+    }
+  }
+}
 
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
@@ -39,7 +58,15 @@ export default defineNuxtConfig({
   electron: {
     build: [
       {
-        entry: 'electron/main.ts'
+        entry: 'electron/main.ts',
+        vite: viteElectronBuildConfig
+      },
+      {
+        entry: 'electron/preload.ts',
+        onstart(options) {
+          options.reload()
+        },
+        vite: viteElectronBuildConfig
       }
     ]
   }

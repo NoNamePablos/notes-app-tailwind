@@ -3,40 +3,14 @@ import { type Notes } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 
 export default defineStore('notes', () => {
-  const notesData = reactive<Notes.Info[]>([
-    {
-      id: uuidv4(),
-      title: 'Welcome',
-      content: 'Hellow Welcome',
-      lastEditTime: new Date().getTime()
-    },
-    {
-      id: uuidv4(),
-      title: 'Note 1',
-      content: 'Hellow note 1',
-      lastEditTime: new Date().getTime()
-    },
-    {
-      id: uuidv4(),
-      title: 'Note 2',
-      content: 'Hellow note 2',
-      lastEditTime: new Date().getTime()
-    },
-    {
-      id: uuidv4(),
-      title: 'Note 3',
-      content: 'Hellow note 3',
-      lastEditTime: new Date().getTime()
-    },
-    {
-      id: uuidv4(),
-      title: 'Note 4',
-      content: 'Hellow note 4',
-      lastEditTime: new Date().getTime()
-    }
-  ])
+  const notesData = ref<Notes.Info[]>([])
 
-  const notes = computed<Notes.Info[]>(() => notesData)
+  const loadNotes = async (): Promise<Notes.Info[]> => {
+    const notes = (await window.context.getNotes()) as Notes.Info[]
+    notesData.value = notes.sort((a, b) => b.lastEditTime - a.lastEditTime)
+  }
+
+  const notes = computed<Notes.Info[]>(() => notesData.value)
 
   const selectedNote = reactive<Notes.Info>({
     id: '',
@@ -64,22 +38,22 @@ export default defineStore('notes', () => {
       lastEditTime: Date.now()
     }
 
-    notesData.unshift(newNote)
+    notesData.value.unshift(newNote)
 
-    setSelectedNote(notesData[0])
+    setSelectedNote(notesData.value[0])
   }
 
   const deleteNote = (note: Notes.Info): void => {
-    const index = notesData.findIndex((noteItem: Notes.Info) => noteItem.id === note.id)
+    const index = notesData.value.findIndex((noteItem: Notes.Info) => noteItem.id === note.id)
 
     if (index !== -1) {
-      notesData.splice(index, 1)
+      notesData.value.splice(index, 1)
 
-      if (!notesData.length) {
+      if (!notesData.value.length) {
         return
       }
 
-      setSelectedNote(notesData[0])
+      setSelectedNote(notesData.value[0])
     }
   }
 
@@ -88,6 +62,7 @@ export default defineStore('notes', () => {
     selectedNote,
     setSelectedNote,
     createEmptyNote,
-    deleteNote
+    deleteNote,
+    loadNotes
   }
 })

@@ -1,1 +1,182 @@
-"use strict";const s=require("electron"),a=require("path"),f={dev:!s.app.isPackaged};process.platform,process.platform,process.platform;const w={watchWindowShortcuts(t,n){if(!t)return;const{webContents:o}=t,{escToCloseWindow:l=!1,zoom:d=!1}=n||{};o.on("before-input-event",(r,e)=>{e.type==="keyDown"&&(f.dev?e.code==="F12"&&(o.isDevToolsOpened()?o.closeDevTools():(o.openDevTools({mode:"undocked"}),console.log("Open dev tool..."))):e.code==="KeyR"&&(e.control||e.meta)&&r.preventDefault(),l&&e.code==="Escape"&&e.key!=="Process"&&(t.close(),r.preventDefault()),d||(e.code==="Minus"&&(e.control||e.meta)&&r.preventDefault(),e.code==="Equal"&&e.shift&&(e.control||e.meta)&&r.preventDefault()))})},registerFramelessWindowIpc(){s.ipcMain.on("win:invoke",(t,n)=>{const o=s.BrowserWindow.fromWebContents(t.sender);o&&(n==="show"?o.show():n==="showInactive"?o.showInactive():n==="min"?o.minimize():n==="max"?o.isMaximized()?o.unmaximize():o.maximize():n==="close"&&o.close())})}};process.env.ELECTRON_DISABLE_SECURITY_WARNINGS="true";const p=a.join(__dirname,"preload.js"),m=a.join(__dirname,"../.output/public");let i=null;async function c(){i=new s.BrowserWindow({width:1200,height:670,show:!1,autoHideMenuBar:!0,center:!0,title:"Note App",frame:!1,vibrancy:"under-window",visualEffectState:"active",titleBarStyle:"hidden",trafficLightPosition:{x:15,y:10},webPreferences:{preload:p,sandbox:!0,contextIsolation:!0}}),i.on("ready-to-show",()=>{i==null||i.show()}),i.webContents.setWindowOpenHandler(t=>(s.shell.openExternal(t.url),{action:"deny"})),s.app.isPackaged?i.loadFile(a.join(m,"index.html")):(i.loadURL(process.env.VITE_DEV_SERVER_URL),i.webContents.openDevTools())}s.app.on("window-all-closed",()=>{i=null,process.platform!=="darwin"&&s.app.quit()});s.app.whenReady().then(()=>{s.app.on("browser-window-created",(t,n)=>{w.watchWindowShortcuts(n)}),c(),s.app.on("activate",function(){s.BrowserWindow.getAllWindows().length===0&&c()})});
+"use strict";
+const electron = require("electron");
+const path = require("path");
+require("os");
+const fsExtra = require("fs-extra");
+const crypto = require("node:crypto");
+const is = {
+  dev: !electron.app.isPackaged
+};
+({
+  isWindows: process.platform === "win32",
+  isMacOS: process.platform === "darwin",
+  isLinux: process.platform === "linux"
+});
+const optimizer = {
+  watchWindowShortcuts(window, shortcutOptions) {
+    if (!window)
+      return;
+    const { webContents } = window;
+    const { escToCloseWindow = false, zoom = false } = shortcutOptions || {};
+    webContents.on("before-input-event", (event, input) => {
+      if (input.type === "keyDown") {
+        if (!is.dev) {
+          if (input.code === "KeyR" && (input.control || input.meta))
+            event.preventDefault();
+        } else {
+          if (input.code === "F12") {
+            if (webContents.isDevToolsOpened()) {
+              webContents.closeDevTools();
+            } else {
+              webContents.openDevTools({ mode: "undocked" });
+              console.log("Open dev tool...");
+            }
+          }
+        }
+        if (escToCloseWindow) {
+          if (input.code === "Escape" && input.key !== "Process") {
+            window.close();
+            event.preventDefault();
+          }
+        }
+        if (!zoom) {
+          if (input.code === "Minus" && (input.control || input.meta))
+            event.preventDefault();
+          if (input.code === "Equal" && input.shift && (input.control || input.meta))
+            event.preventDefault();
+        }
+      }
+    });
+  },
+  registerFramelessWindowIpc() {
+    electron.ipcMain.on("win:invoke", (event, action) => {
+      const win2 = electron.BrowserWindow.fromWebContents(event.sender);
+      if (win2) {
+        if (action === "show") {
+          win2.show();
+        } else if (action === "showInactive") {
+          win2.showInactive();
+        } else if (action === "min") {
+          win2.minimize();
+        } else if (action === "max") {
+          const isMaximized = win2.isMaximized();
+          if (isMaximized) {
+            win2.unmaximize();
+          } else {
+            win2.maximize();
+          }
+        } else if (action === "close") {
+          win2.close();
+        }
+      }
+    });
+  }
+};
+const byteToHex = [];
+for (let i = 0; i < 256; ++i) {
+  byteToHex.push((i + 256).toString(16).slice(1));
+}
+function unsafeStringify(arr, offset = 0) {
+  return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + "-" + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + "-" + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + "-" + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + "-" + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
+}
+const rnds8Pool = new Uint8Array(256);
+let poolPtr = rnds8Pool.length;
+function rng() {
+  if (poolPtr > rnds8Pool.length - 16) {
+    crypto.randomFillSync(rnds8Pool);
+    poolPtr = 0;
+  }
+  return rnds8Pool.slice(poolPtr, poolPtr += 16);
+}
+const native = {
+  randomUUID: crypto.randomUUID
+};
+function v4(options, buf, offset) {
+  if (native.randomUUID && !buf && !options) {
+    return native.randomUUID();
+  }
+  options = options || {};
+  const rnds = options.random || (options.rng || rng)();
+  rnds[6] = rnds[6] & 15 | 64;
+  rnds[8] = rnds[8] & 63 | 128;
+  return unsafeStringify(rnds);
+}
+const getRootDir = () => {
+  return `${__dirname}/notes-app-tailwind`;
+};
+const getNoteInfoFromFile = async (filename) => {
+  console.log("getRootDir: ", getRootDir);
+  const fileStats = await fsExtra.stat(`${getRootDir()}/${filename}`);
+  return {
+    id: v4(),
+    title: filename.replace(/\.md$/, ""),
+    lastEditTime: fileStats.mtimeMs
+  };
+};
+const getNotes = async () => {
+  const rootDir = getRootDir();
+  await fsExtra.ensureDir(rootDir);
+  try {
+    const notesFileNames = await fsExtra.readdir(rootDir, {
+      encoding: "utf8",
+      withFileTypes: false
+    });
+    const notes = notesFileNames.filter((fileName) => fileName.endsWith(".md"));
+    const noteDetails = await Promise.all(notes.map(getNoteInfoFromFile));
+    return noteDetails;
+  } catch (error) {
+    console.error("Error in getNotes:", error);
+    throw error;
+  }
+};
+process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
+const preload = path.join(__dirname, "preload.js");
+const distPath = path.join(__dirname, "../.output/public");
+let win = null;
+async function createWindow() {
+  win = new electron.BrowserWindow({
+    width: 1200,
+    height: 670,
+    show: false,
+    autoHideMenuBar: true,
+    center: true,
+    title: "Note App",
+    frame: false,
+    vibrancy: "under-window",
+    visualEffectState: "active",
+    titleBarStyle: "hidden",
+    trafficLightPosition: { x: 15, y: 10 },
+    webPreferences: {
+      preload,
+      sandbox: true,
+      contextIsolation: true
+    }
+  });
+  win.on("ready-to-show", () => {
+    win == null ? void 0 : win.show();
+  });
+  win.webContents.setWindowOpenHandler((details) => {
+    electron.shell.openExternal(details.url);
+    return { action: "deny" };
+  });
+  if (electron.app.isPackaged) {
+    win.loadFile(path.join(distPath, "index.html"));
+  } else {
+    win.loadURL(process.env.VITE_DEV_SERVER_URL);
+    win.webContents.openDevTools();
+  }
+}
+electron.app.on("window-all-closed", () => {
+  win = null;
+  if (process.platform !== "darwin") electron.app.quit();
+});
+electron.app.whenReady().then(() => {
+  electron.app.on("browser-window-created", (_, window) => {
+    optimizer.watchWindowShortcuts(window);
+  });
+  electron.ipcMain.handle("getNotes", (_, ...args) => getNotes(...args));
+  createWindow();
+  electron.app.on("activate", function() {
+    if (electron.BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});

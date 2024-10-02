@@ -5,7 +5,6 @@ import 'md-editor-v3/lib/style.css'
 import ru_RU from '@vavt/cm-extension/dist/locale/ru'
 import useNotesStore from '@/store/modules/notes'
 import { storeToRefs } from 'pinia'
-import { scrollToTop } from '@utils'
 
 const { selectedNote } = storeToRefs(useNotesStore())
 

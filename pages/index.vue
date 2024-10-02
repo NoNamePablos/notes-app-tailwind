@@ -4,9 +4,13 @@ import { storeToRefs } from 'pinia'
 
 const { t } = useI18n()
 
+const { loadNotes } = useNotesStore()
+
 const { selectedNote } = storeToRefs(useNotesStore())
 
 const currentTitle = computed<string>(() => selectedNote.value.title || t('app_first_window'))
+
+await loadNotes()
 </script>
 
 <template>

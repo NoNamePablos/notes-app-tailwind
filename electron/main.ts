@@ -1,6 +1,8 @@
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { optimizer } from '@electron-toolkit/utils'
 import path from 'path'
+import { type Notes } from '@/types'
+import { getNotes } from '@/electron/lib'
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 
@@ -55,6 +57,9 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+
+  ipcMain.handle('getNotes', (_, ...args: Parameters<Notes.GetNotes>) => getNotes(...args))
+
   createWindow()
 
   app.on('activate', function () {

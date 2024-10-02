@@ -7,4 +7,6 @@ export namespace Notes {
     content?: Content
     lastEditTime: number
   }
+
+  export type GetNotes = () => Promise<Info[]>
 }
