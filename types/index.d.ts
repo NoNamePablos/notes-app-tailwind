@@ -4,7 +4,8 @@ declare global {
   interface Window {
     context:{
       locale:string,
-      getNotes:Notes.GetNotes
+      getNotes:Notes.GetNotes,
+      readNote:Notes.ReadNote
     }
   }
 }

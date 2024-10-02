@@ -8,7 +8,8 @@ if (!process.contextIsolated) {
 try {
   contextBridge.exposeInMainWorld('context', {
     locale: navigator.language,
-    getNotes: (...args: Parameters<Notes.GetNotes>) => ipcRenderer.invoke('getNotes', ...args)
+    getNotes: (...args: Parameters<Notes.GetNotes>) => ipcRenderer.invoke('getNotes', ...args),
+    readNote: (...args: Parameters<Notes.ReadNote>) => ipcRenderer.invoke('readNote', ...args)
   })
 } catch (error) {
   console.error(error)

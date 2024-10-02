@@ -129,6 +129,10 @@ const getNotes = async () => {
     throw error;
   }
 };
+const readNote = async (filename) => {
+  const rootDir = getRootDir();
+  return fsExtra.readFile(`${rootDir}/${filename}.md`, { encoding: "utf8" });
+};
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 const preload = path.join(__dirname, "preload.js");
 const distPath = path.join(__dirname, "../.output/public");
@@ -175,6 +179,7 @@ electron.app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window);
   });
   electron.ipcMain.handle("getNotes", (_, ...args) => getNotes(...args));
+  electron.ipcMain.handle("readNote", (_, ...args) => readNote(...args));
   createWindow();
   electron.app.on("activate", function() {
     if (electron.BrowserWindow.getAllWindows().length === 0) createWindow();

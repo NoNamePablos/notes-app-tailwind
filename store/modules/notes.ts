@@ -19,13 +19,15 @@ export default defineStore('notes', () => {
     lastEditTime: 0
   })
 
-  const setSelectedNote = (note: Notes.Info): void => {
-    const { id, title, lastEditTime, content } = note
+  const setSelectedNote = async (note: Notes.Info): Promise<void> => {
+    const { id, title, lastEditTime } = note
+
+    const noteContent = await window.context.readNote(title)
 
     selectedNote.id = id || ''
     selectedNote.title = title || ''
-    selectedNote.content = content || ''
     selectedNote.lastEditTime = lastEditTime || 0
+    selectedNote.content = noteContent || ''
   }
 
   const createEmptyNote = (): void => {

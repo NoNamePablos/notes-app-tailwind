@@ -2,7 +2,8 @@ import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { optimizer } from '@electron-toolkit/utils'
 import path from 'path'
 import { type Notes } from '@/types'
-import { getNotes } from '@/electron/lib'
+import { getNotes, readNote } from '@/electron/lib'
+import type { ReadNote } from '~/types/models/Note'
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 
@@ -59,6 +60,7 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('getNotes', (_, ...args: Parameters<Notes.GetNotes>) => getNotes(...args))
+  ipcMain.handle('readNote', (_, ...args: Parameters<Notes.ReadNote>) => readNote(...args))
 
   createWindow()
 

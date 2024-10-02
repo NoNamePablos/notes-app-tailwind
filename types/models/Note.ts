@@ -9,4 +9,5 @@ export namespace Notes {
   }
 
   export type GetNotes = () => Promise<Info[]>
+  export type ReadNote = (filename: Info['title']) => Promise<Content>
 }

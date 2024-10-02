@@ -1,5 +1,5 @@
 import { homedir } from 'os'
-import { ensureDir, readdir, stat } from 'fs-extra'
+import { ensureDir, readdir, stat, readFile } from 'fs-extra'
 import { type Notes } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -37,4 +37,10 @@ export const getNotes: Notes.GetNotes = async () => {
     console.error('Error in getNotes:', error)
     throw error
   }
+}
+
+export const readNote: Notes.ReadNote = async (filename) => {
+  const rootDir = getRootDir()
+
+  return readFile(`${rootDir}/${filename}.md`, { encoding: 'utf8' })
 }
