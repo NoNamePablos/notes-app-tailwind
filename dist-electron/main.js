@@ -201,6 +201,7 @@ async function createWindow() {
     visualEffectState: "active",
     titleBarStyle: "hidden",
     trafficLightPosition: { x: 15, y: 10 },
+    backgroundMaterial: "acrylic",
     webPreferences: {
       preload,
       sandbox: true,
