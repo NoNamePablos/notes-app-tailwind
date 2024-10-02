@@ -133,6 +133,11 @@ const readNote = async (filename) => {
   const rootDir = getRootDir();
   return fsExtra.readFile(`${rootDir}/${filename}.md`, { encoding: "utf8" });
 };
+const writeNote = async (filename, content) => {
+  const rootDir = getRootDir();
+  console.info(`Writing note ${filename} to ${rootDir}`);
+  return fsExtra.writeFile(`${rootDir}/${filename}.md`, content, { encoding: "utf8" });
+};
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 const preload = path.join(__dirname, "preload.js");
 const distPath = path.join(__dirname, "../.output/public");
@@ -180,6 +185,7 @@ electron.app.whenReady().then(() => {
   });
   electron.ipcMain.handle("getNotes", (_, ...args) => getNotes(...args));
   electron.ipcMain.handle("readNote", (_, ...args) => readNote(...args));
+  electron.ipcMain.handle("writeNote", (_, ...args) => writeNote(...args));
   createWindow();
   electron.app.on("activate", function() {
     if (electron.BrowserWindow.getAllWindows().length === 0) createWindow();

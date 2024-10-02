@@ -1,5 +1,5 @@
 import { homedir } from 'os'
-import { ensureDir, readdir, stat, readFile } from 'fs-extra'
+import { ensureDir, readdir, stat, readFile, writeFile } from 'fs-extra'
 import { type Notes } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -43,4 +43,11 @@ export const readNote: Notes.ReadNote = async (filename) => {
   const rootDir = getRootDir()
 
   return readFile(`${rootDir}/${filename}.md`, { encoding: 'utf8' })
+}
+
+export const writeNote: Notes.WriteNote = async (filename, content) => {
+  const rootDir = getRootDir()
+
+  console.info(`Writing note ${filename} to ${rootDir}`)
+  return writeFile(`${rootDir}/${filename}.md`, content, { encoding: 'utf8' })
 }

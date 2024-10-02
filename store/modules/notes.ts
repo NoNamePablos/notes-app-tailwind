@@ -59,12 +59,32 @@ export default defineStore('notes', () => {
     }
   }
 
+  const saveNote = async (content: Notes.Content): Promise<void> => {
+    if (!selectedNote || !notes.value) {
+      return
+    }
+
+    await window.context.writeNote(selectedNote.title, content)
+
+    notesData.value.map((note) => {
+      if (note.title === selectedNote.title) {
+        return {
+          ...note,
+          lastEditTime: Date.now()
+        }
+      }
+
+      return note
+    })
+  }
+
   return {
     notes,
     selectedNote,
     setSelectedNote,
     createEmptyNote,
     deleteNote,
-    loadNotes
+    loadNotes,
+    saveNote
   }
 })

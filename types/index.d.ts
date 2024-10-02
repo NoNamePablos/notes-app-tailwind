@@ -1,11 +1,12 @@
-import {type Notes} from './models/Note'
+import { type Notes } from './models/Note'
 
 declare global {
   interface Window {
-    context:{
-      locale:string,
-      getNotes:Notes.GetNotes,
-      readNote:Notes.ReadNote
+    context: {
+      locale: string
+      getNotes: Notes.GetNotes
+      readNote: Notes.ReadNote
+      writeNote: Notes.WriteNote
     }
   }
 }

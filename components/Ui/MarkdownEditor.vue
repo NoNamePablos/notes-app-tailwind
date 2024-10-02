@@ -6,6 +6,8 @@ import ru_RU from '@vavt/cm-extension/dist/locale/ru'
 import useNotesStore from '@/store/modules/notes'
 import { storeToRefs } from 'pinia'
 
+const { saveNote } = useNotesStore()
+
 const { selectedNote } = storeToRefs(useNotesStore())
 
 config({
@@ -31,11 +33,15 @@ watch(
     deep: true
   }
 )
+
+const loggger = (data) => {
+  console.log(data)
+}
 </script>
 
 <template>
   <div class="markdown-editor h-full">
-    <MdEditor v-model="text" :language="markDownLanguage" theme="dark" />
+    <MdEditor v-model="text" :language="markDownLanguage" theme="dark" @on-save="saveNote($event)" />
   </div>
 </template>
 
